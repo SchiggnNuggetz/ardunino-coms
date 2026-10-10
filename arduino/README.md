@@ -1,4 +1,4 @@
-jarik-arduino
+arduino-coms
 =============
 
 Rust project for the _Arduino Uno_.
