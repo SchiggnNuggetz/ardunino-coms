@@ -40,3 +40,12 @@ opt-level = "s"
 
 [dependencies.avr-device]
 version = "0.8.1"
+
+[lints.clippy]
+pedantic = "warn"
+nursery = "warn"
+complexity = "warn"
+cargo = "warn"
+perf = "warn"
+style = "warn"
+correctness = "deny"
