@@ -1,12 +1,12 @@
 [package]
-name = "jarik-arduino"
+name = "arduino-part"
 version = "0.1.0"
 authors = ["JonRobo <info@jonrobo.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [[bin]]
-name = "jarik-arduino"
+name = "arduino-part"
 test = false
 bench = false
 
@@ -15,9 +15,6 @@ panic-halt = "1.0.0"
 ufmt = "0.2.0"
 nb = "1.1.0"
 embedded-hal = "1.0"
-
-[target.'cfg(not(target_arch = "avr"))'.dependencies]
-serialport = "4.3.0" # Oder das Crate, das libudev nutzt
 
 [dependencies.arduino-hal]
 git = "https://github.com/rahix/avr-hal"

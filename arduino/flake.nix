@@ -40,7 +40,7 @@
       overlays.default = final: prev: {
         rustToolchain = fenix.packages.${prev.stdenv.hostPlatform.system}.fromToolchainFile {
           file = ./rust-toolchain.toml;
-          sha256 = "sha256-zm3dyIY2T414ZRR3EhLOvptzG6gta4WZUcawzMUWtqI=";
+          sha256 = "sha256-DnyK5MS+xYySA+csnnMogu2gtEfyiy10W0ATmAvmjGg=";
         };
       };
 
@@ -55,13 +55,17 @@
               bacon
               cargo-shear
               pkgsCross.avr.buildPackages.gcc
+              pkg-config
+              udev
               avrdude
+              ravedude
             ];
             env = {
               # Required by rust-analyzer
               RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
               LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
                 # load external libraries that you need in your rust project here
+                pkgs.udev
               ];
             };
           };
