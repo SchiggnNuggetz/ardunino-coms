@@ -54,12 +54,15 @@
               cargo-generate
               bacon
               cargo-shear
+              udev
+              pkg-config
             ];
             env = {
               # Required by rust-analyzer
               RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
               LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
                 # load external libraries that you need in your rust project here
+                pkgs.udev
                 # pkgs.libxkbcommon
                 # pkgs.libGL
                 # pkgs.stdenv.cc.cc.lib
