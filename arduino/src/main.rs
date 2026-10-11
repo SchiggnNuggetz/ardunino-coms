@@ -70,7 +70,7 @@ fn main() -> ! {
 
     data.data[..10].copy_from_slice(&sample_data);
     // data.print();
-    let sending_data = data.encrypt_to_ascii();
+    let sending_data = data.encrypt_to_bytes();
     // sending_data.print();
     for i in 0..sending_data.length {
         print!("{}", sending_data.data[i as usize] as char);
