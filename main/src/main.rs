@@ -27,7 +27,7 @@ pub async fn cli() {
         .trim()
         .parse::<usize>()
         .expect("Failed to parse usize");
-    let rx = receiver.listen(id, 9600);
+    let rx = receiver.listen(id, 115_200);
     if let Ok(mut rx) = rx {
         while let Some(message) = rx.recv().await {
             let data: Data256 = message.into();

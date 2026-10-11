@@ -71,7 +71,7 @@ impl Decoder for LineCodec {
     type Error = std::io::Error;
 
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
-        let seperator = src.as_ref().iter().position(|b| *b == b'\n');
+        let seperator = src.as_ref().iter().position(|b| *b == 0x03);
         if let Some(n) = seperator {
             return Ok(Some(src.split_to(n + 1)));
         }
