@@ -15,6 +15,7 @@ tokio-util = { version = "0.7.20", features = ["codec"] }
 [features]
 default = ["std"]
 std = []
+no_std = []
 
 [lints.clippy]
 pedantic = "warn"
