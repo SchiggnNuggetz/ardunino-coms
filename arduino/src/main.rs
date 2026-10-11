@@ -1,12 +1,12 @@
 #![no_std]
 #![no_main]
 
-mod ascii_encryption;
-use arduino_hal::pac::ac::acsr::W;
-use ascii_encryption::Data256;
+// mod ascii_encryption;
+// use ascii_encryption::Data256;
 
-mod byte_encryption;
-use byte_encryption::*;
+
+// mod byte_encryption;
+use coms::encryption::Data256;
 
 // use arduino_hal::{hal::usart::UsartWriter, pac::ac::acsr::W};
 use panic_halt as _;
@@ -61,7 +61,7 @@ fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
 
-    let serial = arduino_hal::default_serial!(dp, pins, 57600);
+    let serial = arduino_hal::default_serial!(dp, pins, 115_200);
 
     put_console(serial);
 
@@ -69,23 +69,45 @@ fn main() -> ! {
     let mut data = Data256::new(10);
 
     data.data[..10].copy_from_slice(&sample_data);
-    data.print();
-    let sending_data = data.encrypt_to_bytes();
-    sending_data.print();
+    // data.print();
+    let sending_data = data.encrypt_to_ascii();
+    // sending_data.print();
+    for i in 0..sending_data.length {
+        print!("{}", sending_data.data[i as usize] as char);
+    }
+
+
     let sending_data = sending_data.decrypt_from_bytes();
-    sending_data.print();
+    // sending_data.print();
 
     let sending_data = sending_data.encrypt_to_ascii();
-    sending_data.print();
+    // sending_data.print();
     let sending_data = sending_data.decrypt_from_ascii();
-    sending_data.print();
+    // sending_data.print();
     // print!("{}", sending_data[])
-    println!("{}", 0x3F as char);
+    // println!("{}", 0x3F as char);
 
     let mut led = pins.d13.into_output();
+    let button = pins.d12.into_pull_up_input();
 
     loop {
-        led.toggle();
-        arduino_hal::delay_ms(1000);
+        if button.is_low() {
+            led.set_high();
+        } else {
+            led.set_low();
+        }
+    }
+}
+
+trait Printable {
+    fn print(&self);
+}
+
+impl Printable for Data256 {
+    fn print(&self) {
+        for i in 0..self.length {
+            print!("{:#x} ", self.data[i as usize]);
+        }
+        println!("");
     }
 }
