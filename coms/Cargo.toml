@@ -12,6 +12,10 @@ tokio = { version = "1.53.2" , features = ["full"]}
 tokio-serial = "5.5.0"
 tokio-util = { version = "0.7.20", features = ["codec"] }
 
+[features]
+default = ["std"]
+std = []
+
 [lints.clippy]
 pedantic = "warn"
 nursery = "warn"

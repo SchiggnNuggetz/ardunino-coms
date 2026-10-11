@@ -66,11 +66,10 @@ pub fn listen(path: &str, baud_rate: u32) -> tokio_serial::Result<Receiver<Bytes
         }
     });
 
-    println!("test");
     Ok(rx)
 }
 
-pub struct LineCodec;
+struct LineCodec;
 
 impl Decoder for LineCodec {
     type Item = BytesMut;
@@ -82,13 +81,5 @@ impl Decoder for LineCodec {
             return Ok(Some(src.split_to(n + 1)));
         }
         Ok(None)
-    }
-}
-
-impl Encoder<String> for LineCodec {
-    type Error = std::io::Error;
-
-    fn encode(&mut self, _item: String, _dst: &mut BytesMut) -> Result<(), Self::Error> {
-        Ok(())
     }
 }
