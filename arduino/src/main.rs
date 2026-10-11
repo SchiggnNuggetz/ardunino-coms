@@ -2,7 +2,11 @@
 #![no_main]
 
 mod ascii_encryption;
+use arduino_hal::pac::ac::acsr::W;
 use ascii_encryption::Data256;
+
+mod byte_encryption;
+use byte_encryption::*;
 
 // use arduino_hal::{hal::usart::UsartWriter, pac::ac::acsr::W};
 use panic_halt as _;
@@ -66,7 +70,12 @@ fn main() -> ! {
 
     data.data[..10].copy_from_slice(&sample_data);
     data.print();
-    let sending_data = data.encrypt_to_ascii();
+    let sending_data = data.encrypt_to_bytes();
+    sending_data.print();
+    let sending_data = sending_data.decrypt_from_bytes();
+    sending_data.print();
+
+    let sending_data = sending_data.encrypt_to_ascii();
     sending_data.print();
     let sending_data = sending_data.decrypt_from_ascii();
     sending_data.print();
