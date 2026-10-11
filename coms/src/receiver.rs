@@ -1,7 +1,5 @@
-use std::{sync::Arc, time::Duration};
-
 use futures::StreamExt;
-use tokio::runtime::Runtime;
+use tokio::sync::mpsc::{self, Receiver};
 use tokio_serial::{SerialPortBuilderExt, SerialPortInfo, SerialPortType};
 use tokio_util::{
     bytes::BytesMut,
@@ -10,28 +8,25 @@ use tokio_util::{
 
 pub struct ArduinoReceiver {
     usb: Vec<SerialPortInfo>,
-    rt: Arc<Runtime>,
 }
 
 impl ArduinoReceiver {
-    pub fn new() -> anyhow::Result<Self> {
+    /// # Errors
+    /// When failing to access available ports
+    pub fn new() -> tokio_serial::Result<Self> {
         let usb = tokio_serial::available_ports()?
             .into_iter()
             .filter(|v| matches!(&v.port_type, SerialPortType::UsbPort(_)))
             .collect();
-        let rt = Arc::new(
-            tokio::runtime::Builder::new_multi_thread()
-                .enable_all()
-                .build()?,
-        );
-        Ok(Self { usb, rt })
+        Ok(Self { usb })
     }
 
+    #[must_use]
     pub const fn get_usb_ports(&self) -> &Vec<SerialPortInfo> {
         &self.usb
     }
 
-    pub fn select(&self, id: usize) -> tokio_serial::Result<String> {
+    fn select(&self, id: usize) -> tokio_serial::Result<String> {
         let port = self.usb.get(id);
         port.map_or_else(
             || {
@@ -44,51 +39,37 @@ impl ArduinoReceiver {
         )
     }
 
-    /// 115_200
-    pub fn listen<F, Fut>(
-        &self,
-        id: usize,
-        baud_rate: u32,
-        mut decode: F,
-    ) -> tokio_serial::Result<()>
-    where
-        F: FnMut(BytesMut) -> Fut + Send + 'static,
-        Fut: Future<Output = ()> + Send + 'static,
-    {
+    /// recommended baud_rate: 115_200
+    /// # Errors
+    /// When failing to open the serial port
+    pub fn listen(&self, id: usize, baud_rate: u32) -> tokio_serial::Result<Receiver<BytesMut>> {
         let path = self.select(id)?;
-        let mut port = tokio_serial::new(path, baud_rate).open_native_async()?;
-        let _guard = self.rt.enter();
-        #[cfg(unix)]
-        port.set_exclusive(false)
-            .expect("Unable to set serial port exclusive to false");
-
-        self.rt.handle().spawn(async move {
-            let mut reader = LineCodec.framed(port);
-            while let Some(result) = reader.next().await {
-                if let Ok(bytes) = result {
-                    decode(bytes).await;
-                }
-            }
-        });
-        println!("test");
-        Ok(())
-    }
-
-    /// Doesn't work
-    pub fn listen_sync(&self, id: usize) -> anyhow::Result<()> {
-        let path = self.select(id)?;
-        let builder = tokio_serial::new(path, 115_200);
-        let mut port = builder.open()?;
-        std::thread::sleep(Duration::from_millis(6000));
-        'listen: loop {
-            let mut line = Vec::new();
-            port.read_to_end(&mut line)?;
-            println!("{:?}", str::from_utf8(&line));
-        }
+        listen(&path, baud_rate)
     }
 }
 
-#[expect(dead_code)]
+/// recommended baud_rate: 115_200
+/// # Errors
+/// When failing to open the serial port
+pub fn listen(path: &str, baud_rate: u32) -> tokio_serial::Result<Receiver<BytesMut>> {
+    let mut port = tokio_serial::new(path, baud_rate).open_native_async()?;
+    #[cfg(unix)]
+    port.set_exclusive(false)?;
+    let (tx, rx) = mpsc::channel(32);
+
+    tokio::spawn(async move {
+        let mut reader = LineCodec.framed(port);
+        while let Some(result) = reader.next().await {
+            if let Ok(bytes) = result {
+                let _ = tx.send(bytes).await;
+            }
+        }
+    });
+
+    println!("test");
+    Ok(rx)
+}
+
 pub struct LineCodec;
 
 impl Decoder for LineCodec {

@@ -1,25 +1,15 @@
-use std::{io, sync::Arc};
+use std::io;
 
 use coms::receiver::ArduinoReceiver;
 
 #[tokio::main]
 async fn main() {
-    cli();
-    let rt = Arc::new(
-        tokio::runtime::Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .unwrap(),
-    );
-
-    // let mut port = serialport::new("/dev/ttyACM0", 115200)
-    //     .open()
-    //     .expect("Unable to open port");
+    cli().await;
 }
 
 /// # Panics
 /// If something goes wrong
-pub fn cli() {
+pub async fn cli() {
     let receiver = ArduinoReceiver::new().expect("Failed to create receiver");
 
     let ports = receiver.get_usb_ports();
@@ -36,11 +26,16 @@ pub fn cli() {
         .trim()
         .parse::<usize>()
         .expect("Failed to parse usize");
-    loop {
-        receiver
-            .listen(id, 115_200, |line| async move {
-                println!("got: {line:?}");
-            })
-            .unwrap();
+    let rx = receiver.listen(id, 9600);
+    if let Ok(mut rx) = rx {
+        while let Some(message) = rx.recv().await {
+            if let Ok(str) = str::from_utf8(message.as_ref()) {
+                println!("{str}");
+            } else {
+                println!("n");
+            }
+        }
+    } else if let Err(e) = rx {
+        println!("{e}");
     }
 }
