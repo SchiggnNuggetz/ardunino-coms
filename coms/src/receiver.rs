@@ -1,10 +1,7 @@
 use futures::StreamExt;
 use tokio::sync::mpsc::{self, Receiver};
 use tokio_serial::{SerialPortBuilderExt, SerialPortInfo, SerialPortType};
-use tokio_util::{
-    bytes::BytesMut,
-    codec::{Decoder, Encoder},
-};
+use tokio_util::{bytes::BytesMut, codec::Decoder};
 
 pub struct ArduinoReceiver {
     usb: Vec<SerialPortInfo>,
@@ -39,7 +36,6 @@ impl ArduinoReceiver {
         )
     }
 
-    /// recommended baud_rate: 115_200
     /// # Errors
     /// When failing to open the serial port
     pub fn listen(&self, id: usize, baud_rate: u32) -> tokio_serial::Result<Receiver<BytesMut>> {
@@ -48,7 +44,6 @@ impl ArduinoReceiver {
     }
 }
 
-/// recommended baud_rate: 115_200
 /// # Errors
 /// When failing to open the serial port
 pub fn listen(path: &str, baud_rate: u32) -> tokio_serial::Result<Receiver<BytesMut>> {

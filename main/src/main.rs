@@ -1,6 +1,7 @@
+#![expect(clippy::multiple_crate_versions, clippy::cargo_common_metadata)]
 use std::io;
 
-use coms::receiver::ArduinoReceiver;
+use coms::{encryption::Data256, receiver::ArduinoReceiver};
 
 #[tokio::main]
 async fn main() {
@@ -29,11 +30,9 @@ pub async fn cli() {
     let rx = receiver.listen(id, 9600);
     if let Ok(mut rx) = rx {
         while let Some(message) = rx.recv().await {
-            if let Ok(str) = str::from_utf8(message.as_ref()) {
-                println!("{str}");
-            } else {
-                println!("n");
-            }
+            let data: Data256 = message.into();
+            let decrypted = data.decrypt_from_ascii();
+            decrypted.print();
         }
     } else if let Err(e) = rx {
         println!("{e}");
